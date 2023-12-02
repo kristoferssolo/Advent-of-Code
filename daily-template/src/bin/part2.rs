@@ -1,9 +1,9 @@
 use color_eyre::Result;
-use {{crate_name}}::part1::process;
+use {{crate_name}}::part2::process;
 
 fn main() -> Result<()> {
     let file = include_str!("../../input2.txt");
-    let result = process(file).context("process part 2")?;
+    let result = process(file)?;
     println!("{}", result);
     Ok(())
 }
