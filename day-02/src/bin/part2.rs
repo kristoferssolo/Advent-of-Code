@@ -1,5 +1,5 @@
 use color_eyre::Result;
-use day_02::part1::process;
+use day_02::part2::process;
 
 fn main() -> Result<()> {
     let file = include_str!("../../input2.txt");
