@@ -8,3 +8,6 @@ edition = "2021"
 [dependencies]
 color-eyre = { workspace = true }
 itertools = { workspace = true }
+nom = { workspace = true }
+nom-supreme = { workspace = true }
+rayon = { workspace = true }

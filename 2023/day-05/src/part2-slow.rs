@@ -16,7 +16,16 @@ impl FromStr for Seeds {
                 })
                 .collect::<Vec<_>>()
         });
-        let seeds = nums.ok_or("No seeds found")?;
+        let seeds = nums
+            .ok_or("No seeds found")?
+            .chunks(2)
+            .flat_map(|chunk| {
+                let start = chunk[0];
+                let end = start + chunk[1];
+                (start..=end).collect::<Vec<usize>>()
+            })
+            .collect();
+
         Ok(Self(seeds))
     }
 }
@@ -145,7 +154,7 @@ temperature-to-humidity map:
 humidity-to-location map:
 60 56 37
 56 93 4";
-        assert_eq!(35, process(input)?);
+        assert_eq!(46, process(input)?);
         Ok(())
     }
 }
