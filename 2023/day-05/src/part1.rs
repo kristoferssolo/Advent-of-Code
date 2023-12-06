@@ -1,5 +1,5 @@
 use color_eyre::{eyre::anyhow, Result};
-use std::{iter::Zip, ops::Range, str::FromStr, vec::IntoIter};
+use std::str::FromStr;
 
 #[derive(Debug, Clone)]
 struct Seeds(Vec<usize>);
@@ -28,6 +28,12 @@ struct SeedMap {
     range_len: Vec<usize>,
 }
 
+impl SeedMap {
+    fn iter(&self) -> impl Iterator<Item = (&usize, &usize, &usize)> {
+        itertools::izip!(&self.dest_range, &self.source_range, &self.range_len)
+    }
+}
+
 impl From<Vec<usize>> for SeedMap {
     fn from(value: Vec<usize>) -> Self {
         let mut dest_range = Vec::new();
@@ -47,31 +53,6 @@ impl From<Vec<usize>> for SeedMap {
             source_range,
             range_len,
         }
-    }
-    /* fn from(value: Vec<usize>) -> Self {
-        let (dest_range, source_range, range_len): (HashSet<_>, HashSet<_>, HashSet<_>) = value
-            .chunks(3)
-            .flat_map(|chunk| match chunk {
-                [dest, source, range] => Some((*dest, *source, *range)),
-                _ => None,
-            })
-            .unzip();
-        Self {
-            dest_range,
-            source_range,
-            range_len,
-        }
-    } */
-}
-
-impl IntoIterator for SeedMap {
-    type Item = ((usize, usize), usize);
-    type IntoIter = Zip<Zip<IntoIter<usize>, IntoIter<usize>>, IntoIter<usize>>;
-    fn into_iter(self) -> Self::IntoIter {
-        self.dest_range
-            .into_iter()
-            .zip(self.source_range.into_iter())
-            .zip(self.range_len.into_iter())
     }
 }
 
@@ -104,28 +85,25 @@ pub fn process(input: &str) -> Result<usize> {
         .filter_map(|map_option| map_option)
         .collect();
 
-    let mut new_seeds = Vec::new();
     let mut step = seeds.0;
+    let mut next_step = Vec::new();
 
     for map in &maps {
-        for ((dest_range, source_range), range_len) in map.clone() {
-            for (index, num) in step.clone().iter().enumerate() {
-                dbg!(index);
+        for (&dest_range, &source_range, &range_len) in map.iter() {
+            for num in step.clone() {
                 if (source_range..=source_range + range_len).contains(&num) {
+                    step.retain(|&x| x != num);
                     let dest = num + dest_range - source_range;
-                    new_seeds.push(dest);
-                } else {
-                    new_seeds.push(*num);
+                    next_step.push(dest);
                 }
             }
-            step = new_seeds.clone();
-            new_seeds.clear();
         }
-        // dbg!(&step);
-        println!("---------------------------------------------");
+        next_step.append(&mut step);
+        step = next_step.clone();
+        next_step.clear();
     }
 
-    Ok(*step.iter().min().ok_or_else(|| anyhow!("Error"))?)
+    Ok(*step.iter().min().unwrap_or(&0))
 }
 
 #[cfg(test)]
