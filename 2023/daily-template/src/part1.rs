@@ -1,6 +1,6 @@
 use color_eyre::Result;
 
-pub fn process(input: &str) -> Result<u32> {
+pub fn process(input: &str) -> Result<usize> {
     todo!("day xx - part 1");
     Ok(0)
 }
