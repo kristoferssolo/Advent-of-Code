@@ -204,6 +204,12 @@ version = "0.1.0"
 dependencies = [
  "color-eyre",
  "itertools",
+
+[[package]]
+name = "day-12"
+version = "0.1.0"
+dependencies = [
+ "color-eyre",
 ]
 
 [[package]]
