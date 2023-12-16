@@ -1,125 +1,89 @@
-use std::str::FromStr;
-
 use color_eyre::Result;
+use itertools::{repeat_n, Itertools};
+use nom::{
+    bytes::complete::{is_a, tag},
+    character::complete::{self, space1},
+    multi::separated_list1,
+    sequence::separated_pair,
+    IResult,
+};
 
-#[derive(Debug, Clone, Copy, PartialEq)]
-enum SpringStatus {
-    Operational,
-    Unknown,
-    Damaged,
+#[derive(Debug)]
+struct Puzzle {
+    spaces_to_fill: usize,
+    line: String,
+    batches: Vec<usize>,
 }
 
-#[derive(Debug, Clone, PartialEq, Default)]
-struct Spring {
-    status: Vec<SpringStatus>,
-    condition: Vec<usize>,
-}
-
-impl Spring {
-    fn arragement_amount(&self) -> usize {
-        let mut combinations = vec![vec![]];
-        for status in &self.status {
-            let mut new_combinations = Vec::new();
-            for combination in &combinations {
-                match status {
-                    SpringStatus::Operational => {
-                        let mut new_combination = combination.clone();
-                        new_combination.push(*status);
-                        new_combinations.push(new_combination);
-                    }
-                    SpringStatus::Unknown => {
-                        let mut new_combination = combination.clone();
-                        new_combination.push(SpringStatus::Operational);
-                        new_combinations.push(new_combination);
-                        let mut new_combination = combination.clone();
-                        new_combination.push(SpringStatus::Damaged);
-                        new_combinations.push(new_combination);
-                    }
-                    SpringStatus::Damaged => {
-                        let mut new_combination = combination.clone();
-                        new_combination.push(*status);
-                        new_combinations.push(new_combination);
-                    }
-                }
-            }
-            combinations = new_combinations;
-        }
-
-        let combinations = combinations
-            .iter()
-            .map(|combination| {
-                let mut combination_status: Vec<usize> = Vec::new();
-                let mut count = 0;
-                combination.iter().for_each(|status| {
-                    match status {
-                        SpringStatus::Operational => {
-                            if count > 0 {
-                                combination_status.push(count);
-                            }
-                            count = 0;
-                        }
-                        SpringStatus::Damaged => count += 1,
-                        SpringStatus::Unknown => unimplemented!("Should not happen"),
-                    };
-                });
-                if count > 0 {
-                    combination_status.push(count);
-                }
-                combination_status
-            })
-            .filter(|status| status == &self.condition);
-
-        combinations.count()
+impl Puzzle {
+    fn generate_permutations(&self) -> impl Iterator<Item = String> {
+        repeat_n([".", "#"].into_iter(), self.spaces_to_fill)
+            .multi_cartesian_product()
+            .map(|x| x.join(""))
     }
-}
 
-impl FromStr for Spring {
-    type Err = color_eyre::Report;
-    fn from_str(s: &str) -> std::prelude::v1::Result<Self, Self::Err> {
-        let line = s.split_whitespace().collect::<Vec<_>>();
-        let status = line
-            .first()
-            .unwrap()
+    fn check_option(&self, option: &str) -> bool {
+        let mut option_iter = option.chars();
+        let filled_option = self
+            .line
             .chars()
             .map(|ch| match ch {
-                '?' => SpringStatus::Unknown,
-                '.' => SpringStatus::Operational,
-                '#' => SpringStatus::Damaged,
-                _ => unreachable!(),
+                '?' => option_iter
+                    .next()
+                    .expect("Should have a len similar to needed gaps"),
+                value => value,
             })
-            .collect::<Vec<_>>();
-        let condition = line
-            .last()
-            .unwrap()
-            .split(',')
-            .map(|s| s.parse::<usize>().unwrap())
-            .collect::<Vec<_>>();
-
-        let mut new_status = status.clone();
-        let mut new_condition = condition.clone();
-
-        for _ in 0..4 {
-            new_status.push(SpringStatus::Unknown);
-            new_status.extend(status.clone().iter());
-            new_condition.extend(condition.clone().iter());
-        }
-
-        dbg!(&new_status, &new_condition);
-
-        Ok(Self {
-            status: new_status,
-            condition: new_condition,
-        })
+            .collect::<String>();
+        let counts = filled_option
+            .chars()
+            .group_by(|ch| ch == &'#')
+            .into_iter()
+            .filter_map(|(is_hashes, group)| is_hashes.then_some(group.into_iter().count()))
+            .collect_vec();
+        &self.batches[..] == &counts[..]
     }
+
+    fn possible_solution_count(&self) -> usize {
+        let count = self
+            .generate_permutations()
+            .filter(|option| self.check_option(option))
+            .count();
+        count
+    }
+}
+
+fn parse_line(input: &str) -> IResult<&str, Puzzle> {
+    let (input, (line, batches)) = separated_pair(
+        is_a("?.#"),
+        space1,
+        separated_list1(tag(","), complete::u32),
+    )(input)?;
+    let expanded_line = std::iter::repeat(line).take(5).join("?");
+    let spaces_to_fill = expanded_line.chars().filter(|ch| ch != &'?').count();
+    Ok((
+        input,
+        Puzzle {
+            spaces_to_fill,
+            line: expanded_line,
+            batches: std::iter::repeat(batches)
+                .take(5)
+                .flatten()
+                .map(|x| x as usize)
+                .collect(),
+        },
+    ))
 }
 
 pub fn process(input: &str) -> Result<usize> {
-    let springs = input.lines().map(|line| {
-        Spring::from_str(line)
-            .unwrap_or_default()
-            .arragement_amount()
-    });
-    Ok(springs.sum())
+    let puzzles = input
+        .lines()
+        .map(parse_line)
+        .collect::<std::result::Result<Vec<(&str, Puzzle)>, nom::Err<nom::error::Error<&str>>>>()
+        .expect("Parsisng to succeed");
+    let sum = puzzles
+        .iter()
+        .map(|(_, puzzle)| puzzle.possible_solution_count());
+    Ok(sum.sum())
 }
 
 #[cfg(test)]
@@ -135,112 +99,6 @@ mod tests {
     ????.######..#####. 1,6,5
     ?###???????? 3,2,1";
         assert_eq!(525152, process(input)?);
-        Ok(())
-    }
-
-    #[test]
-    fn test_from_str() -> Result<()> {
-        let input = "???.### 1,1,3";
-        let spring = Spring::from_str(input)?;
-        assert_eq!(
-            vec![
-                SpringStatus::Unknown,
-                SpringStatus::Unknown,
-                SpringStatus::Unknown,
-                SpringStatus::Operational,
-                SpringStatus::Damaged,
-                SpringStatus::Damaged,
-                SpringStatus::Damaged,
-                SpringStatus::Unknown,
-                SpringStatus::Unknown,
-                SpringStatus::Unknown,
-                SpringStatus::Unknown,
-                SpringStatus::Operational,
-                SpringStatus::Damaged,
-                SpringStatus::Damaged,
-                SpringStatus::Damaged,
-                SpringStatus::Unknown,
-                SpringStatus::Unknown,
-                SpringStatus::Unknown,
-                SpringStatus::Unknown,
-                SpringStatus::Operational,
-                SpringStatus::Damaged,
-                SpringStatus::Damaged,
-                SpringStatus::Damaged,
-                SpringStatus::Unknown,
-                SpringStatus::Unknown,
-                SpringStatus::Unknown,
-                SpringStatus::Unknown,
-                SpringStatus::Operational,
-                SpringStatus::Damaged,
-                SpringStatus::Damaged,
-                SpringStatus::Damaged,
-                SpringStatus::Unknown,
-                SpringStatus::Unknown,
-                SpringStatus::Unknown,
-                SpringStatus::Unknown,
-                SpringStatus::Operational,
-                SpringStatus::Damaged,
-                SpringStatus::Damaged,
-                SpringStatus::Damaged,
-            ],
-            spring.status
-        );
-        assert_eq!(
-            vec![1, 1, 3, 1, 1, 3, 1, 1, 3, 1, 1, 3, 1, 1, 3],
-            spring.condition
-        );
-        Ok(())
-    }
-
-    #[test]
-    fn test_line_1() -> Result<()> {
-        assert_eq!(1, Spring::from_str("???.### 1,1,3")?.arragement_amount());
-        Ok(())
-    }
-
-    #[test]
-    fn test_line_2() -> Result<()> {
-        assert_eq!(
-            16384,
-            Spring::from_str(".??..??...?##. 1,1,3")?.arragement_amount()
-        );
-        Ok(())
-    }
-
-    #[test]
-    fn test_line_3() -> Result<()> {
-        assert_eq!(
-            1,
-            Spring::from_str("?#?#?#?#?#?#?#? 1,3,1,6")?.arragement_amount()
-        );
-        Ok(())
-    }
-
-    #[test]
-    fn test_line_4() -> Result<()> {
-        assert_eq!(
-            16,
-            Spring::from_str("????.#...#... 4,1,1")?.arragement_amount()
-        );
-        Ok(())
-    }
-
-    #[test]
-    fn test_line_5() -> Result<()> {
-        assert_eq!(
-            2500,
-            Spring::from_str("????.######..#####. 1,6,5")?.arragement_amount()
-        );
-        Ok(())
-    }
-
-    #[test]
-    fn test_line_6() -> Result<()> {
-        assert_eq!(
-            506250,
-            Spring::from_str("?###???????? 3,2,1")?.arragement_amount()
-        );
         Ok(())
     }
 }
