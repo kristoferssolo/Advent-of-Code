@@ -1,5 +1,6 @@
 use miette::Result;
 
+#[tracing::instrument]
 pub fn process(input: &str) -> Result<usize> {
     todo!("day xx - part 1");
     Ok(0)

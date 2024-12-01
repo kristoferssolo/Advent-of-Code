@@ -1,5 +1,6 @@
-use color_eyre::Result;
+use miette::Result;
 
+#[tracing::instrument]
 pub fn process(input: &str) -> Result<usize> {
     let (mut firsts, mut lasts): (Vec<_>, Vec<_>) = input
         .lines()
