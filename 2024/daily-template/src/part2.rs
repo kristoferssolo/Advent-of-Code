@@ -1,4 +1,4 @@
-use color_eyre::Result;
+use miette::Result;
 
 pub fn process(input: &str) -> Result<usize> {
     todo!("day xx - part 2");

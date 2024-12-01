@@ -1,2 +1,4 @@
 /target
 day-*.bench.txt
+.env
+input*.txt

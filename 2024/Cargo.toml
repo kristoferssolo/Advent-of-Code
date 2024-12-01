@@ -2,12 +2,22 @@
 resolver = "2"
 
 members = ["day-*"]
+default-members = ["day-*"]
 
 [workspace.dependencies]
-color-eyre = "0.6"
 itertools = "0.13"
 nom = "7.1"
 nom-supreme = "0.8"
 rayon = "1.8"
 thiserror = "2.0"
 glam = "0.29"
+tracing = "0.1.41"
+tracing-subscriber = { version = "0.3.18", features = ["fmt", "env-filter"] }
+rstest = "0.23.0"
+rstest_reuse = "0.7.0"
+divan = "0.1.7"
+miette = { version = "7.4", features = ["fancy"] }
+nom_locate = "4.2.0"
+test-log = { version = "0.2.13", default-features = false, features = [
+  "trace",
+] }
