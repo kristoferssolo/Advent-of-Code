@@ -1,6 +1,7 @@
-use miette::{Diagnostic, Result};
+use miette::Result;
 use std::str::FromStr;
-use thiserror::Error;
+
+use crate::{grid::Grid, vec::Vec2};
 
 enum Direction {
     Right,     // (1, 0)
@@ -14,16 +15,16 @@ enum Direction {
 }
 
 impl Direction {
-    const fn get_vector(&self) -> (i32, i32) {
+    const fn get_vector(&self) -> Vec2 {
         match self {
-            Direction::Right => (1, 0),
-            Direction::Left => (-1, 0),
-            Direction::Up => (0, -1),
-            Direction::Down => (0, 1),
-            Direction::UpRight => (1, -1),
-            Direction::UpLeft => (-1, -1),
-            Direction::DownRight => (1, 1),
-            Direction::DownLeft => (-1, 1),
+            Direction::Right => Vec2::new(1, 0),
+            Direction::Left => Vec2::new(-1, 0),
+            Direction::Up => Vec2::new(0, -1),
+            Direction::Down => Vec2::new(0, 1),
+            Direction::UpRight => Vec2::new(1, -1),
+            Direction::UpLeft => Vec2::new(-1, -1),
+            Direction::DownRight => Vec2::new(1, 1),
+            Direction::DownLeft => Vec2::new(-1, 1),
         }
     }
 
@@ -41,68 +42,34 @@ impl Direction {
     }
 }
 
-#[derive(Debug, Error, Diagnostic)]
-enum GridError {
-    #[error("Error parsing")]
-    ParseError,
+trait Part1 {
+    fn check_direction(&self, pos: Vec2, direction: &Direction, word: &str) -> bool;
+    fn count_word(&self, word: &str) -> usize;
 }
 
-#[derive(Debug)]
-struct Grid {
-    data: Vec<Vec<char>>,
-    rows: usize,
-    cols: usize,
-}
-
-impl Grid {
-    fn check_direction(&self, row: i32, col: i32, direction: &Direction, word: &str) -> bool {
-        let (dx, dy) = direction.get_vector();
+impl Part1 for Grid {
+    fn check_direction(&self, pos: Vec2, direction: &Direction, word: &str) -> bool {
+        let dir_vec = direction.get_vector();
         word.chars().enumerate().all(|(idx, char)| {
-            let new_row = row + dy * idx as i32;
-            let new_col = col + dx * idx as i32;
-            self.is_valid_position(new_row, new_col)
-                && self.data[new_row as usize][new_col as usize] == char
+            let new_pos = pos + dir_vec.scale(idx as i32);
+            self.is_valid_position(&new_pos)
+                && self.0[new_pos.y as usize][new_pos.x as usize] == char
         })
     }
 
-    fn is_valid_position(&self, row: i32, col: i32) -> bool {
-        row >= 0 && row < self.rows as i32 && col >= 0 && col < self.cols as i32
-    }
-
     fn count_word(&self, word: &str) -> usize {
-        (0..self.rows)
+        (0..self.rows())
             .flat_map(|row| {
-                (0..self.cols).flat_map(move |col| {
+                (0..self.cols()).flat_map(move |col| {
                     Direction::all_directions()
                         .into_iter()
                         .filter(move |direction| {
-                            self.check_direction(row as i32, col as i32, direction, word)
+                            let pos = Vec2::new(col as i32, row as i32);
+                            self.check_direction(pos, direction, word)
                         })
                 })
             })
             .count()
-    }
-}
-
-impl FromStr for Grid {
-    type Err = GridError;
-    fn from_str(s: &str) -> std::result::Result<Self, Self::Err> {
-        let data = s
-            .lines()
-            .map(|line| line.chars().collect::<Vec<_>>())
-            .collect::<Vec<_>>();
-
-        let rows = data.len();
-        if rows == 0 {
-            return Err(GridError::ParseError);
-        }
-        let cols = data[0].len();
-
-        if data.iter().any(|row| row.len() != cols) {
-            return Err(GridError::ParseError);
-        }
-
-        Ok(Grid { data, rows, cols })
     }
 }
 
