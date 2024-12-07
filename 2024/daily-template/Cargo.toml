@@ -22,3 +22,7 @@ test-log.workspace = true
 name = "{{project-name}}-bench"
 path = "benches/benchmarks.rs"
 harness = false
+
+[lints.clippy]
+pedantic = "warn"
+nursery = "warn"
