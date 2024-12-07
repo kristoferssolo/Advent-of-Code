@@ -1,8 +1,6 @@
-use std::str::FromStr;
-
 use miette::{Diagnostic, Result};
+use std::str::FromStr;
 use thiserror::Error;
-use tracing::Instrument;
 
 #[derive(Debug, Clone, Copy)]
 enum Operator {
@@ -11,7 +9,7 @@ enum Operator {
 }
 
 impl Operator {
-    const fn apply(&self, a: usize, b: usize) -> usize {
+    const fn apply(self, a: usize, b: usize) -> usize {
         match self {
             Self::Add => a + b,
             Self::Multiply => a * b,
