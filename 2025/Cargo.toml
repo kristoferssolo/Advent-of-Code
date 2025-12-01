@@ -1,0 +1,40 @@
+[workspace]
+members = [
+    "day-*",
+    "day-01",
+]
+default-members = ["day-*"]
+resolver = "2"
+
+[workspace.dependencies]
+divan = "0.1"
+glam = "0.30"
+itertools = "0.14"
+nom = "8.0"
+nom-supreme = "0.8"
+nom_locate = "5.0"
+rayon = "1.11"
+rstest = "0.26"
+rstest_reuse = "0.7"
+thiserror = "2.0"
+tracing = "0.1"
+
+[workspace.dependencies.miette]
+version = "7.6"
+features = ["fancy"]
+
+[workspace.dependencies.test-log]
+version = "0.2"
+features = ["trace"]
+default-features = false
+
+[workspace.dependencies.tracing-subscriber]
+version = "0.3"
+features = [
+    "fmt",
+    "env-filter",
+]
+
+[workspace.lints.clippy]
+nursery = "warn"
+pedantic = "warn"
