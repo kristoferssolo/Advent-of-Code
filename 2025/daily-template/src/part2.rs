@@ -1,6 +1,8 @@
 use miette::Result;
 
 #[tracing::instrument]
+#[allow(clippy::missing_panics_doc)]
+#[allow(clippy::missing_errors_doc)]
 pub fn process(input: &str) -> Result<usize> {
     todo!("day xx - part 2");
     Ok(0)
