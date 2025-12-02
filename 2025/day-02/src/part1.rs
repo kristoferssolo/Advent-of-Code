@@ -7,7 +7,7 @@ struct Id(usize);
 impl FromStr for Id {
     type Err = String;
     fn from_str(s: &str) -> std::result::Result<Self, Self::Err> {
-        let val = s.parse().unwrap();
+        let val = s.parse::<usize>().map_err(|e| e.to_string())?;
         Ok(Self(val))
     }
 }
@@ -35,15 +35,20 @@ impl Range {
 fn has_repeating_sequence(num: usize) -> bool {
     let s = num.to_string();
     let len = s.len();
-    len.is_multiple_of(2) && s[0..len / 2].repeat(2) == s
+    (1..=len / 2).any(|pattern_len| {
+        let repeats = len / pattern_len;
+        repeats >= 2
+            && len.is_multiple_of(pattern_len)
+            && s[0..pattern_len].repeat(len / pattern_len) == s
+    })
 }
 
 impl FromStr for Range {
     type Err = String;
     fn from_str(s: &str) -> std::result::Result<Self, Self::Err> {
         let mut trimmed = s.trim().split('-');
-        let start = trimmed.next().unwrap().parse().unwrap();
-        let end = trimmed.next_back().unwrap().parse().unwrap();
+        let start = trimmed.next().unwrap_or_default().parse()?;
+        let end = trimmed.next_back().unwrap_or_default().parse()?;
         Ok(Self { start, end })
     }
 }
@@ -58,6 +63,9 @@ pub fn process(input: &str) -> Result<usize> {
         .map(Range::from_str)
         .flat_map(|range| range.unwrap().find_invalid())
         .map(|x| x.0)
+        .inspect(|x| {
+            dbg!(x);
+        })
         .sum();
     Ok(result)
 }
