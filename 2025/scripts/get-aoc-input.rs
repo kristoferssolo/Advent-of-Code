@@ -49,7 +49,7 @@ fn main() -> Result<(), reqwest::Error> {
         .exit()
     };
 
-    let url = format!("https://adventofcode.com/2024/day/{day}/input");
+    let url = format!("https://adventofcode.com/2025/day/{day}/input");
     println!("sending to `{}`", url);
 
     let client = Client::new();
