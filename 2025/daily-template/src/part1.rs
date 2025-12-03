@@ -1,9 +1,7 @@
-use miette::Result;
-
 #[tracing::instrument]
 #[allow(clippy::missing_panics_doc)]
 #[allow(clippy::missing_errors_doc)]
-pub fn process(input: &str) -> Result<usize> {
+pub fn process(input: &str) -> miette::Result<usize> {
     todo!("day xx - part 1");
     Ok(0)
 }
@@ -13,7 +11,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_process() -> Result<()> {
+    fn test_process() -> miette::Result<()> {
         let input = "";
         todo!("haven't built test yet");
         let result = 0;
