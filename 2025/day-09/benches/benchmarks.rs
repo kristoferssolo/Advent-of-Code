@@ -1,4 +1,4 @@
-use day_09::*;
+use day_09::{part1, part2};
 
 fn main() {
     divan::main();
@@ -6,16 +6,10 @@ fn main() {
 
 #[divan::bench]
 fn part1() {
-    part1::process(divan::black_box(include_str!(
-        "../input1.txt",
-    )))
-    .unwrap();
+    part1::process(divan::black_box(include_str!("../input1.txt"))).unwrap();
 }
 
 #[divan::bench]
 fn part2() {
-    part2::process(divan::black_box(include_str!(
-        "../input2.txt",
-    )))
-    .unwrap();
+    part2::process(divan::black_box(include_str!("../input2.txt"))).unwrap();
 }

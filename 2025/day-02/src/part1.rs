@@ -63,9 +63,6 @@ pub fn process(input: &str) -> Result<usize> {
         .map(Range::from_str)
         .flat_map(|range| range.unwrap().find_invalid())
         .map(|x| x.0)
-        .inspect(|x| {
-            dbg!(x);
-        })
         .sum();
     Ok(result)
 }
