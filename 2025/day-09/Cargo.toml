@@ -12,6 +12,7 @@ tracing.workspace = true
 tracing-subscriber.workspace = true
 miette.workspace = true
 thiserror.workspace = true
+glam.workspace = true
 
 [dev-dependencies]
 divan.workspace = true

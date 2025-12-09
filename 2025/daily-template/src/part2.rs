@@ -1,4 +1,4 @@
-use miette::Result;
+use miette::miette;
 
 #[tracing::instrument]
 #[allow(clippy::missing_panics_doc)]
@@ -13,7 +13,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_process() -> Result<()> {
+    fn test_process() -> miette::Result<()> {
         let input = "";
         todo!("haven't built test yet");
         let result = 0;
